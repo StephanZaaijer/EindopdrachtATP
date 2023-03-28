@@ -1,0 +1,10 @@
+#ignore IDE files
+.vscode/*
+
+#ignore python compiled files
+__pycache__/*
+*.pyc
+
+#ignore pybind11-build files
+*.so
+*.o
