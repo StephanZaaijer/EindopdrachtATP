@@ -1,5 +1,6 @@
-#include "Sensor.hpp"
 #include "Actuator.hpp"
+#include "Pid.hpp"
+#include "Sensor.hpp"
 
 
 PYBIND11_MODULE(atp, m) {
@@ -29,4 +30,22 @@ PYBIND11_MODULE(atp, m) {
         .def(pybind11::init<const int&, const bool&>())
         .def("SetState", &Relais::SetState, "Set the state of the relais", pybind11::arg("bState"))
         .def("GetState", &Relais::GetState, "Get the state of the relais");
+
+    pybind11::class_<PID>(m, "Relais")
+        .def(pybind11::init<const float&, const float&,const float&,const float&>())
+        .def("update", &PID::update, "Get new value of PID", pybind11::arg("fInput"))
+        .def("setTarget", &PID::setTarget, "Set targetvalue")
+        .def("setKp", &PID::setKp, "Set Kp")
+        .def("setKi", &PID::setKi, "Set Ki")
+        .def("setKd", &PID::setKd, "Set Kd")
+        .def("getTarget", &PID::getTarget, "Get targetvalue")
+        .def("getKp", &PID::getKp, "Get Kp")
+        .def("getKi", &PID::getKi, "Get Ki")
+        .def("getKd", &PID::getKd, "Get Kd")
+        .def("getLastError", &PID::getLastError, "Get last error")
+        .def("getIntegral", &PID::getIntegral, "Get integral")
+        .def("resetIntegral", &PID::resetIntegral, "Reset integral")
+        .def("resetLastError", &PID::resetLastError, "Reset last error")
+        .def("reset", &PID::reset, "Reset PID");
+
 }
