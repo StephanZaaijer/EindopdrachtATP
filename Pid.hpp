@@ -1,3 +1,6 @@
+#ifndef PID_HPP
+#define PID_HPP
+
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -29,3 +32,5 @@ private:
     float mfLastError;
     float mfIntegral;
 };
+
+#endif // PID_HPP

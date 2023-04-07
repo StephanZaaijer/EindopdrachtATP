@@ -1,3 +1,6 @@
+#ifndef ACTUATOR_HPP
+#define ACTUATOR_HPP
+
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -23,13 +26,26 @@ private:
 
 };
 
-class Relais {
+class Actuator {
 public:
-    Relais(const int& iControlPin = 0, const bool& bState = false);
-    void SetState(const bool& bState);
-    bool GetState();
-
-private:
+    Actuator(const int& iControlPin, const float& fPower);
+    void SetPowervalue(const float& fPower);
+    float GetPowervalue() const;
+protected:
     int miControlPin;
-    bool mbState;
+    float mfPower;
 };
+
+class Heater: public Actuator {
+public:
+    Heater(const int& iControlPin, const float& fPower);
+};
+
+class Dispensor: public Actuator {
+public:
+    Dispensor(const int& iControlPin, const float& fPower);
+};
+
+
+
+#endif // ACTUATOR_HPP

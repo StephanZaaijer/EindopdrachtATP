@@ -18,26 +18,38 @@ void Display::WriteString( const std::string& sString )
     #endif
 }
 
-Relais::Relais( const int& iControlPin, const bool& bState):
+Actuator::Actuator( const int& iControlPin, const float& fPower ):
     miControlPin(iControlPin),
-    mbState(bState)
+    mfPower(fPower)
 {
     #ifdef RPI
         pinMode(miControlPin, OUTPUT);
-        digitalWrite(miControlPin, bState);
+        analogWrite(miControlPin, mfPower);
     #endif
 }
 
 
-void Relais::SetState(const bool& bState)
+void Actuator::SetPowervalue(const float& fPower)
 {
+    mfPower = fPower;
+    if (mfPower > 100)
+        mfPower = 100;
+    if (mfPower < 0)
+        mfPower = 0;
     #ifdef RPI
-        digitalWrite(miControlPin, bState);
+        analogWrite(miControlPin, mfPower*2.55);
     #endif
-    mbState = bState;
 }
 
-bool Relais::GetState()
+float Actuator::GetPowervalue() const
 {
-    return mbState;
+    return mfPower;
 }
+
+Heater::Heater( const int& iControlPin, const float& fPower ):
+    Actuator(iControlPin, fPower)
+{}
+
+Dispensor::Dispensor( const int& iControlPin, const float& fPower ):
+    Actuator(iControlPin, fPower)
+{}

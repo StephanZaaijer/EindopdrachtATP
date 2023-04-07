@@ -31,7 +31,7 @@ PythonModule.o: PythonModule.cpp Pid.o Actuator.o Sensor.o
 	@echo "Compiling $@..."
 	@$(COMPILER) $(CFLAGS_LINUX) -c $< -o $@
 
-Sensor.o: Sensor.cpp Sensor.hpp
+Sensor.o: Sensor.cpp Sensor.hpp Actuator.hpp
 	@echo "Compiling $@..."
 	@$(COMPILER) $(CFLAGS_LINUX) -c $< -o $@
 

@@ -1,5 +1,10 @@
+#ifndef SENSOR_HPP
+#define SENSOR_HPP
+
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+#include "Actuator.hpp"
 
 #ifdef RPI
     #include <wiringPi.h>
@@ -24,10 +29,7 @@ private:
 
 class TestSensor : public Sensor {
 public:
-    TestSensor( const float& fLastValue = 0.0f,
-                const float& fMaxDifference = 1.0f,
-                const float& fMinValue = -100.0f,
-                const float& fMaxValue = 100.0f );
+    TestSensor( const float& fLastValue, const float& fMaxDifference, const float& fMinValue, const float& fMaxValue, const float& fDefaultDecay, const float &fMaxActuatorChange, const Actuator& actuator);
     float getValue() override;
     void setValue(const float& fValue);
     void setMaxDifference(const float& fMaxDifference);
@@ -37,4 +39,9 @@ private:
     float mfMaxDifference;
     float mfMinValue;
     float mfMaxValue;
+    float mfDefaultDecay;
+    float mfMaxActuatorChange;
+    const Actuator& mActuator;
 };
+
+#endif // SENSOR_HPP

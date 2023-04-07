@@ -22,16 +22,21 @@ float Sensor::getValue()
     #endif
 }
 
-TestSensor::TestSensor( const float& fLastValue, const float& fMaxDifference, const float& fMinValue, const float& fMaxValue ):
+TestSensor::TestSensor( const float& fLastValue, const float& fMaxDifference, const float& fMinValue, const float& fMaxValue, const float& fDefaultDecay, const float &fMaxActuatorChange, const Actuator& actuator):
     mfLastValue(fLastValue),
     mfMaxDifference(fMaxDifference),
     mfMinValue(fMinValue),
-    mfMaxValue(fMaxValue)
+    mfMaxValue(fMaxValue),
+    mfDefaultDecay(fDefaultDecay),
+    mfMaxActuatorChange(fMaxActuatorChange),
+    mActuator(actuator)
     {}
     
 float TestSensor::getValue()
 {
-    mfLastValue += ( (rand() % 100) - 100 ) / 100.0f * mfMaxDifference;
+    mfLastValue -= mfDefaultDecay;
+    mfLastValue += mfMaxActuatorChange * mActuator.GetPowervalue()/100;
+    mfLastValue -= mfMaxDifference/100* ((rand() % 200) - 100);
     if (mfLastValue < mfMinValue)
         mfLastValue = mfMinValue;
     if (mfLastValue > mfMaxValue)
