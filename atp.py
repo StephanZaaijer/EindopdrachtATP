@@ -1,8 +1,9 @@
-import ATP, sys
+import ATP, sys, random
 
 sys.setrecursionlimit(10000)
 
 FUNCTIONAL_PID_VERSION = True
+SWITCHING_TARGET_VALUE = True
 
 def PID( value, setpoint, kp, ki, kd, iterations=0, integralValue=0, last_error=0 ):
     error = setpoint - value
@@ -47,43 +48,56 @@ def mainloop_functional_PID( tempSensor, chloorSensor, max_iterations, iteration
     else:
         return mainloop_functional_PID( tempSensor, chloorSensor, max_iterations, iterations+1, temp_log, chloor_log, integralTemp, errorTemp, integralChloor, errorChloor )
 
-def mainloop_functional_PIDv2( tempSensor, chloorSensor, chloorPid, tempPid, tempTarget, chloorTarget, max_iterations, iterations=1, temp_log = [], chloor_log=[] ):
+def mainloop_functional_PID_Changing_Target( tempSensor, PhSensor, max_iterations, targetsTemp, targetsPh, iterations=1, temp_log = [], Ph_log=[], integralTemp=0, errorTemp=0, integralPh=0, errorPh=0 ):
     tempValue = tempSensor.getValue()
-    chloorValue = chloorSensor.getValue()
+    PhValue = PhSensor.getValue()
 
-    tempPidValue = tempPid( tempTarget, tempValue )
-    chloorPidValue = chloorPid( chloorTarget, chloorValue )
+    tempPidValue, _, integralTemp, errorTemp = PID( tempValue, targetsTemp[0], 8, 0.025, 0.5, iterations, integralTemp, errorTemp)
+    phPidValue, _, integralPh, errorPh = PID( PhValue, targetsPh[0], 8, 0.1, 0.9, iterations, integralPh, errorPh)
 
     heater.SetPowervalue( tempPidValue )
-    dispensor.SetPowervalue( chloorPidValue )
+    dispensor.SetPowervalue( phPidValue )
     
     temp_log.append( tempValue )
-    chloor_log.append( chloorValue )
+    Ph_log.append( PhValue )
 
     if iterations == max_iterations:
-        return temp_log, chloor_log
+        return temp_log, Ph_log
     else:
-        return mainloop_functional_PIDv2( tempSensor, chloorSensor, chloorPid, tempPid, tempTarget, chloorTarget, max_iterations, iterations+1, temp_log, chloor_log )
+        return mainloop_functional_PID_Changing_Target( tempSensor, PhSensor, max_iterations, targetsTemp[1:], targetsPh[1:], iterations+1, temp_log, Ph_log, integralTemp, errorTemp, integralPh, errorPh )
+
+
 
 if __name__ == "__main__":
 
     heater = ATP.Heater(10 , 0)
     dispensor = ATP.Dispensor(11 , 0)
 
-    tempSensor = ATP.TestSensor( 0, 0, -100, 100, 0.05, 1, heater )
-    chloorSensor = ATP.TestSensor( 5, 0.0, 0, 100, 0.18, 0.5, dispensor )
+    tempSensor = ATP.TMP36TestSensor( 0, 2, -40, 125, 0.05, 1, heater )
+    chloorSensor = ATP.PHSensorTestSensor( 5, 0.0, 0, 100, 0.18, 0.5, dispensor )
 
-    if FUNCTIONAL_PID_VERSION:
-        tempPid = ATP.PID( 30, 8, 0.01, 0.5 )
-        chloorPid = ATP.PID( 8, 9, 0.1, 0.9 )
+    if not SWITCHING_TARGET_VALUE:
+        if FUNCTIONAL_PID_VERSION:
+            tempPid = ATP.PID( 30, 8, 0.01, 0.5 )
+            chloorPid = ATP.PID( 8, 9, 0.1, 0.9 )
 
-        temp, chloor = mainloop( tempSensor, chloorSensor, chloorPid, tempPid, 9997 )
+            temp, chloor = mainloop( tempSensor, chloorSensor, chloorPid, tempPid, 9997 )
 
+        else:
+            temp, chloor = mainloop_functional_PID( tempSensor, chloorSensor, 9997 )
     else:
-        temp, chloor = mainloop_functional_PID( tempSensor, chloorSensor, 9997 )
-        
+        # create list of 10000 random values between 30 and 40
+        targetsTemp = 1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]
+        targetsPh = 1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]
+        temp, chloor = mainloop_functional_PID_Changing_Target(tempSensor, chloorSensor, 9997, targetsTemp, targetsPh)
+
     # plot temps
     import matplotlib.pyplot as plt
     plt.plot( temp )
     plt.plot( chloor )
+
+    if SWITCHING_TARGET_VALUE:
+        plt.plot( targetsTemp )
+        plt.plot( targetsPh )
+
     plt.show()

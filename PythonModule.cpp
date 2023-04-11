@@ -43,14 +43,27 @@ PYBIND11_MODULE(ATP, m) {
         .def("resetLastError", &PID::resetLastError, "Reset last error")
         .def("reset", &PID::reset, "Reset PID");
 
-      pybind11::class_<Sensor>(m, "Sensor")
-        .def(pybind11::init<>())
+    pybind11::class_<Sensor>(m, "Sensor")
         .def("getValue", &Sensor::getValue, "Get the value of the sensor");
 
-    pybind11::class_<TestSensor, Sensor> TestSensor(m, "TestSensor");
-    TestSensor.def(pybind11::init<const float &, const float, const float &, const float &, const float &, const float &, const Actuator&>());
-    TestSensor.def("getValue", &TestSensor::getValue, "Get the value of the sensor");
-    TestSensor.def("setValue", &TestSensor::setValue, "Set the value of the sensor", pybind11::arg("fValue"));
-    TestSensor.def("setMaxDifference", &TestSensor::setMaxDifference, "Set the max difference of the sensor", pybind11::arg("dMaxDifference"));
+    pybind11::class_<TMP36, Sensor>(m, "TMP36")
+        .def(pybind11::init<const int&>())
+        .def("getValue", &Sensor::getValue, "Get the value of the sensor");
+
+    pybind11::class_<TMP36TestSensor, TMP36, Sensor>(m, "TMP36TestSensor")
+        .def(pybind11::init<const float &, const float, const float &, const float &, const float &, const float &, const Actuator&>())
+        .def("getValue", &TMP36TestSensor::getValue, "Get the value of the sensor")
+        .def("setValue", &TMP36TestSensor::setValue, "Set the value of the sensor", pybind11::arg("fValue"))
+        .def("CalculateValue", &TMP36TestSensor::CalculateValue, "Calculate the value of the sensor", pybind11::arg("fValue"));
+
+    pybind11::class_<PHSensor, Sensor>(m, "PHSensor")
+        .def(pybind11::init<const int&>())
+        .def("getValue", &Sensor::getValue, "Get the value of the sensor");
+    
+    pybind11::class_<PHSensorTestSensor, PHSensor, Sensor>(m, "PHSensorTestSensor")
+        .def(pybind11::init<const float &, const float, const float &, const float &, const float &, const float &, const Actuator&>())
+        .def("getValue", &PHSensorTestSensor::getValue, "Get the value of the sensor")
+        .def("setValue", &PHSensorTestSensor::setValue, "Set the value of the sensor", pybind11::arg("fValue"))
+        .def("CalculateValue", &PHSensorTestSensor::CalculateValue, "Calculate the value of the sensor", pybind11::arg("fValue"));
 
 }

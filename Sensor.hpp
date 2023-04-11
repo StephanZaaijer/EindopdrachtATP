@@ -13,13 +13,14 @@
 class Sensor {
 public:
     Sensor( const int& iDataPin = 0,
-            const float& fLowestValue = 100.0f,
+            const float& fLowestValue = -100.0f,
             const float& fHighestValue = 100.0f,
             const float& fSensorMin = 0.0f,
             const float& fSensorMax = 5.00f );
     virtual float getValue();
 
-private:
+protected:
+    virtual float CalculateValue( const float& fValue ) = 0;
     int miDataPin;
     float mfLowestValue;
     float mfHighestValue;
@@ -27,12 +28,48 @@ private:
     float mfSensorMax;
 };
 
-class TestSensor : public Sensor {
+class TMP36 : public Sensor {
 public:
-    TestSensor( const float& fLastValue, const float& fMaxDifference, const float& fMinValue, const float& fMaxValue, const float& fDefaultDecay, const float &fMaxActuatorChange, const Actuator& actuator);
+    TMP36( const int& iDataPin = 0 );
+
+protected:
+    float CalculateValue( const float& fValue ) override;
+    
+};
+
+class TMP36TestSensor : public TMP36 {
+public:
+    TMP36TestSensor( const float& fLastValue, const float& fMaxDifference, const float& fMinValue, const float& fMaxValue, const float& fDefaultDecay, const float &fMaxActuatorChange, const Actuator& actuator);
     float getValue() override;
     void setValue(const float& fValue);
-    void setMaxDifference(const float& fMaxDifference);
+
+    float CalculateValue( const float& fValue ) override;
+
+private:
+    float mfLastValue;
+    float mfMaxDifference;
+    float mfMinValue;
+    float mfMaxValue;
+    float mfDefaultDecay;
+    float mfMaxActuatorChange;
+    const Actuator& mActuator;
+};
+
+class PHSensor : public Sensor {
+public:
+    PHSensor( const int& iDataPin = 0 );
+
+protected:
+    float CalculateValue( const float& fValue ) override;
+};
+
+class PHSensorTestSensor : public PHSensor {
+public:
+    PHSensorTestSensor( const float& fLastValue, const float& fMaxDifference, const float& fMinValue, const float& fMaxValue, const float& fDefaultDecay, const float &fMaxActuatorChange, const Actuator& actuator);
+    float getValue() override;
+    void setValue(const float& fValue);
+
+    float CalculateValue( const float& fValue ) override;
 
 private:
     float mfLastValue;
