@@ -32,7 +32,7 @@ def PID( value, setpoint, kp, ki, kd, iterations=0, integralValue=0, last_error=
     output = kp * error + ki * integralValue + kd * derivative
     return output, iterations+1, integralValue, error
 
-def mainloop( tempSensor, phSensor, display, phPid, tempPid, max_iterations, iterations=0, temp_log = [], ph_log=[] ):
+def mainloop( tempSensor, phSensor, display, heater, dispensor, phPid, tempPid, max_iterations, iterations=0, temp_log = [], ph_log=[] ):
     tempValue = tempSensor.getValue()
     phValue = phSensor.getValue()
 
@@ -50,9 +50,9 @@ def mainloop( tempSensor, phSensor, display, phPid, tempPid, max_iterations, ite
     if iterations == max_iterations:
         return temp_log, ph_log
     else:
-        return mainloop( tempSensor, phSensor, display, phPid, tempPid, max_iterations, iterations+1, temp_log, ph_log )
+        return mainloop( tempSensor, phSensor, display, heater, dispensor, phPid, tempPid, max_iterations, iterations+1, temp_log, ph_log )
 
-def mainloop_functional_PID( tempSensor, phSensor, display, max_iterations, iterations=1, temp_log = [], ph_log=[], integralTemp=0, errorTemp=0, integralPh=0, errorPh=0 ):
+def mainloop_functional_PID( tempSensor, phSensor, display, heater, dispensor, max_iterations, iterations=1, temp_log = [], ph_log=[], integralTemp=0, errorTemp=0, integralPh=0, errorPh=0 ):
     tempValue = tempSensor.getValue()
     phValue = phSensor.getValue()
 
@@ -70,9 +70,9 @@ def mainloop_functional_PID( tempSensor, phSensor, display, max_iterations, iter
     if iterations == max_iterations:
         return temp_log, ph_log
     else:
-        return mainloop_functional_PID( tempSensor, phSensor, display, max_iterations, iterations+1, temp_log, ph_log, integralTemp, errorTemp, integralPh, errorPh )
+        return mainloop_functional_PID( tempSensor, phSensor, display, heater, dispensor, max_iterations, iterations+1, temp_log, ph_log, integralTemp, errorTemp, integralPh, errorPh )
 
-def mainloop_functional_PID_Changing_Target( tempSensor, PhSensor, display, max_iterations, targetsTemp, targetsPh, iterations=1, temp_log = [], Ph_log=[], integralTemp=0, errorTemp=0, integralPh=0, errorPh=0 ):
+def mainloop_functional_PID_Changing_Target( tempSensor, PhSensor, display, heater, dispensor, max_iterations, targetsTemp, targetsPh, iterations=1, temp_log = [], Ph_log=[], integralTemp=0, errorTemp=0, integralPh=0, errorPh=0 ):
     tempValue = tempSensor.getValue()
     phValue = PhSensor.getValue()
 
@@ -90,7 +90,7 @@ def mainloop_functional_PID_Changing_Target( tempSensor, PhSensor, display, max_
     if iterations == max_iterations:
         return temp_log, Ph_log
     else:
-        return mainloop_functional_PID_Changing_Target( tempSensor, PhSensor, display, max_iterations, targetsTemp[1:], targetsPh[1:], iterations+1, temp_log, Ph_log, integralTemp, errorTemp, integralPh, errorPh )
+        return mainloop_functional_PID_Changing_Target( tempSensor, PhSensor, display, heater, dispensor, max_iterations, targetsTemp[1:], targetsPh[1:], iterations+1, temp_log, Ph_log, integralTemp, errorTemp, integralPh, errorPh )
 
 if __name__ == "__main__":
     
@@ -107,14 +107,14 @@ if __name__ == "__main__":
             tempPid = ATP.PID( 30, 8, 0.01, 0.5 )
             phPid = ATP.PID( 8, 9, 0.1, 0.9 )
 
-            temp, ph = mainloop( tempSensor, phSensor, display, phPid, tempPid, 9997 )
+            temp, ph = mainloop( tempSensor, phSensor, display, heater, dispensor, phPid, tempPid, 9997 )
 
         else:
-            temp, ph = mainloop_functional_PID( tempSensor, phSensor, display, 9997 )
+            temp, ph = mainloop_functional_PID( tempSensor, phSensor, display, heater, dispensor, 9997 )
     else:
         targetsTemp = 1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]
         targetsPh = 1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]
-        temp, ph = mainloop_functional_PID_Changing_Target(tempSensor, phSensor, display, 9997, targetsTemp, targetsPh)
+        temp, ph = mainloop_functional_PID_Changing_Target(tempSensor, phSensor, display, heater, dispensor, 9997, targetsTemp, targetsPh)
 
     import matplotlib.pyplot as plt
     plt.plot( temp )

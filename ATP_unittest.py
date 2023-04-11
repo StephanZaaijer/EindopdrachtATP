@@ -43,12 +43,14 @@ class ATPTestCase(unittest.TestCase):
         heater = ATP.Heater(10 , 0)
         dispensor = ATP.Dispensor(11 , 0)
 
+        display = ATP.Display()
+
         tempSensor = ATP.TMP36TestSensor( 0, 2, -40, 125, 0.05, 1, heater )
         phSensor = ATP.PHSensorTestSensor( 5, 0.0, 0, 100, 0.18, 0.5, dispensor )
 
         targetsTemp = 1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]
         targetsPh = 1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]
-        temp, ph = atp.mainloop_functional_PID_Changing_Target(tempSensor, phSensor, 9997, targetsTemp, targetsPh)
+        temp, ph = atp.mainloop_functional_PID_Changing_Target(tempSensor, phSensor, display, heater, dispensor, 9997, targetsTemp, targetsPh)
 
         plt.plot( temp )
         plt.plot( ph )
