@@ -5,9 +5,13 @@ CFLAGS_LINUX = -O3 -Wall -shared -std=c++11 -fPIC $(shell python3-config --inclu
 PYTHON_MODULEFILE = $(TARGET)${shell python3-config --extension-suffix}
 
 .DEFAULT_GOAL := all
-.PHONY: all run build clean
+.PHONY: all run build clean unittest
 
 all: run build
+
+unittest: build
+	@echo "Executing unittests..."
+	@python3 ATP_unittest.py
 
 build: $(PYTHON_MODULEFILE)
 
