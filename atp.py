@@ -1,4 +1,4 @@
-import ATP, sys, random
+import ATP, sys, random, inspect
 from functools import wraps
 
 sys.setrecursionlimit(20000)
@@ -21,94 +21,104 @@ def log(func):
             pass
     return logger 
 
-@log
 def PID( value, setpoint, kp, ki, kd, iterations=0, integralValue=0, last_error=0 ):
     error = setpoint - value
     integralValue += error
+    if integralValue > 1000:
+        integralValue = 1000
+    elif integralValue < -1000:
+        integralValue = -1000
     derivative = error - last_error
     output = kp * error + ki * integralValue + kd * derivative
     return output, iterations+1, integralValue, error
 
-def mainloop( tempSensor, chloorSensor, chloorPid, tempPid, max_iterations, iterations=0, temp_log = [], chloor_log=[] ):
+def mainloop( tempSensor, phSensor, display, phPid, tempPid, max_iterations, iterations=0, temp_log = [], ph_log=[] ):
     tempValue = tempSensor.getValue()
-    chloorValue = chloorSensor.getValue()
+    phValue = phSensor.getValue()
 
-    chloorPidValue = chloorPid.update( chloorValue )
+    phPidValue = phPid.update( phValue )
     tempPidValue = tempPid.update( tempValue )
     
     heater.SetPowervalue( tempPidValue )
-    dispensor.SetPowervalue( chloorPidValue )
+    dispensor.SetPowervalue( phPidValue )
     
+    display.WriteString( "Temperature: %s °C\nPH-value: %s" % (tempValue, phValue) )
+
     temp_log.append( tempValue )
-    chloor_log.append( chloorValue )
+    ph_log.append( phValue )
 
     if iterations == max_iterations:
-        return temp_log, chloor_log
+        return temp_log, ph_log
     else:
-        return mainloop( tempSensor, chloorSensor, chloorPid, tempPid, max_iterations, iterations+1, temp_log, chloor_log )
+        return mainloop( tempSensor, phSensor, display, phPid, tempPid, max_iterations, iterations+1, temp_log, ph_log )
 
-def mainloop_functional_PID( tempSensor, chloorSensor, max_iterations, iterations=1, temp_log = [], chloor_log=[], integralTemp=0, errorTemp=0, integralChloor=0, errorChloor=0 ):
+def mainloop_functional_PID( tempSensor, phSensor, display, max_iterations, iterations=1, temp_log = [], ph_log=[], integralTemp=0, errorTemp=0, integralPh=0, errorPh=0 ):
     tempValue = tempSensor.getValue()
-    chloorValue = chloorSensor.getValue()
+    phValue = phSensor.getValue()
 
     tempPidValue, _, integralTemp, errorTemp = PID( tempValue, 30, 8, 0.01, 0.5, iterations, integralTemp, errorTemp)
-    chloorPidValue, _, integralChloor, errorChloor = PID( chloorValue, 8, 9, 0.1, 0.9, iterations, integralChloor, errorChloor)
-
-    heater.SetPowervalue( tempPidValue )
-    dispensor.SetPowervalue( chloorPidValue )
-    
-    temp_log.append( tempValue )
-    chloor_log.append( chloorValue )
-
-    if iterations == max_iterations:
-        return temp_log, chloor_log
-    else:
-        return mainloop_functional_PID( tempSensor, chloorSensor, max_iterations, iterations+1, temp_log, chloor_log, integralTemp, errorTemp, integralChloor, errorChloor )
-
-def mainloop_functional_PID_Changing_Target( tempSensor, PhSensor, max_iterations, targetsTemp, targetsPh, iterations=1, temp_log = [], Ph_log=[], integralTemp=0, errorTemp=0, integralPh=0, errorPh=0 ):
-    tempValue = tempSensor.getValue()
-    PhValue = PhSensor.getValue()
-
-    tempPidValue, _, integralTemp, errorTemp = PID( tempValue, targetsTemp[0], 8, 0.01, 0.5, iterations, integralTemp, errorTemp)
-    phPidValue, _, integralPh, errorPh = PID( PhValue, targetsPh[0], 8, 0.1, 0.9, iterations, integralPh, errorPh)
+    phPidValue, _, integralPh, errorPh = PID( phValue, 8, 9, 0.1, 0.9, iterations, integralPh, errorPh)
 
     heater.SetPowervalue( tempPidValue )
     dispensor.SetPowervalue( phPidValue )
     
+    display.WriteString( "Temperature: %s °C\nPH-value: %s" % (tempValue, phValue) )
+
     temp_log.append( tempValue )
-    Ph_log.append( PhValue )
+    ph_log.append( phValue )
+
+    if iterations == max_iterations:
+        return temp_log, ph_log
+    else:
+        return mainloop_functional_PID( tempSensor, phSensor, display, max_iterations, iterations+1, temp_log, ph_log, integralTemp, errorTemp, integralPh, errorPh )
+
+def mainloop_functional_PID_Changing_Target( tempSensor, PhSensor, display, max_iterations, targetsTemp, targetsPh, iterations=1, temp_log = [], Ph_log=[], integralTemp=0, errorTemp=0, integralPh=0, errorPh=0 ):
+    tempValue = tempSensor.getValue()
+    phValue = PhSensor.getValue()
+
+    tempPidValue, _, integralTemp, errorTemp = PID( tempValue, targetsTemp[0], 8, 0.01, 0.5, iterations, integralTemp, errorTemp)
+    phPidValue, _, integralPh, errorPh = PID( phValue, targetsPh[0], 8, 0.1, 0.9, iterations, integralPh, errorPh)
+
+    heater.SetPowervalue( tempPidValue )
+    dispensor.SetPowervalue( phPidValue )
+
+    display.WriteString( "Temperature: %s °C\nPH-value: %s" % (tempValue, phValue) )
+    
+    temp_log.append( tempValue )
+    Ph_log.append( phValue )
 
     if iterations == max_iterations:
         return temp_log, Ph_log
     else:
-        return mainloop_functional_PID_Changing_Target( tempSensor, PhSensor, max_iterations, targetsTemp[1:], targetsPh[1:], iterations+1, temp_log, Ph_log, integralTemp, errorTemp, integralPh, errorPh )
+        return mainloop_functional_PID_Changing_Target( tempSensor, PhSensor, display, max_iterations, targetsTemp[1:], targetsPh[1:], iterations+1, temp_log, Ph_log, integralTemp, errorTemp, integralPh, errorPh )
 
 if __name__ == "__main__":
+    
     heater = ATP.Heater(10 , 0)
     dispensor = ATP.Dispensor(11 , 0)
 
-    tempSensor = ATP.TMP36TestSensor( 0, 2, -40, 125, 0.05, 1, heater )
-    chloorSensor = ATP.PHSensorTestSensor( 5, 0.0, 0, 100, 0.18, 0.5, dispensor )
+    display = ATP.Display()
+
+    tempSensor = ATP.TMP36TestSensor( 0, 0, -40, 125, 0.05, 1, heater )
+    phSensor = ATP.PHSensorTestSensor( 5, 0.0, 0, 100, 0.18, 0.5, dispensor )
 
     if not SWITCHING_TARGET_VALUE:
-        if FUNCTIONAL_PID_VERSION:
+        if not FUNCTIONAL_PID_VERSION:
             tempPid = ATP.PID( 30, 8, 0.01, 0.5 )
-            chloorPid = ATP.PID( 8, 9, 0.1, 0.9 )
+            phPid = ATP.PID( 8, 9, 0.1, 0.9 )
 
-            temp, chloor = mainloop( tempSensor, chloorSensor, chloorPid, tempPid, 9997 )
+            temp, ph = mainloop( tempSensor, phSensor, display, phPid, tempPid, 9997 )
 
         else:
-            temp, chloor = mainloop_functional_PID( tempSensor, chloorSensor, 9997 )
+            temp, ph = mainloop_functional_PID( tempSensor, phSensor, display, 9997 )
     else:
-        # create list of 10000 random values between 30 and 40
         targetsTemp = 1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]+1000*[random.randint(20, 40)]
         targetsPh = 1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]+1000*[random.randint(7, 10)]
-        temp, chloor = mainloop_functional_PID_Changing_Target(tempSensor, chloorSensor, 9997, targetsTemp, targetsPh)
+        temp, ph = mainloop_functional_PID_Changing_Target(tempSensor, phSensor, display, 9997, targetsTemp, targetsPh)
 
-    # plot temps
     import matplotlib.pyplot as plt
     plt.plot( temp )
-    plt.plot( chloor )
+    plt.plot( ph )
 
     if SWITCHING_TARGET_VALUE:
         plt.plot( targetsTemp )

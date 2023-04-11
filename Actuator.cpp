@@ -14,7 +14,7 @@ void Display::WriteString( const std::string& sString )
     #ifdef RPI
         mDisplayStream << sString;
     #else
-        std::cout << sString;
+        pybind11::print(sString);
     #endif
 }
 
