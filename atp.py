@@ -1,10 +1,27 @@
 import ATP, sys, random
+from functools import wraps
 
-sys.setrecursionlimit(10000)
+sys.setrecursionlimit(20000)
 
 FUNCTIONAL_PID_VERSION = True
 SWITCHING_TARGET_VALUE = True
 
+def log(func):
+    @wraps(func)
+    def logger( *args, **kwargs):
+        try:
+            print("Entering: [%s] with arguments %s, and keyword arguments %s" % (func.__name__, args, kwargs))
+            try:
+                output = func( *args, **kwargs)
+                print("Exiting: [%s] with output %s\n\n" % (func.__name__, output))
+                return output
+            except Exception as e:
+                print('Exception in %s : %s' % (func.__name__, e))
+        except:
+            pass
+    return logger 
+
+@log
 def PID( value, setpoint, kp, ki, kd, iterations=0, integralValue=0, last_error=0 ):
     error = setpoint - value
     integralValue += error
@@ -52,7 +69,7 @@ def mainloop_functional_PID_Changing_Target( tempSensor, PhSensor, max_iteration
     tempValue = tempSensor.getValue()
     PhValue = PhSensor.getValue()
 
-    tempPidValue, _, integralTemp, errorTemp = PID( tempValue, targetsTemp[0], 8, 0.025, 0.5, iterations, integralTemp, errorTemp)
+    tempPidValue, _, integralTemp, errorTemp = PID( tempValue, targetsTemp[0], 8, 0.01, 0.5, iterations, integralTemp, errorTemp)
     phPidValue, _, integralPh, errorPh = PID( PhValue, targetsPh[0], 8, 0.1, 0.9, iterations, integralPh, errorPh)
 
     heater.SetPowervalue( tempPidValue )
@@ -66,10 +83,7 @@ def mainloop_functional_PID_Changing_Target( tempSensor, PhSensor, max_iteration
     else:
         return mainloop_functional_PID_Changing_Target( tempSensor, PhSensor, max_iterations, targetsTemp[1:], targetsPh[1:], iterations+1, temp_log, Ph_log, integralTemp, errorTemp, integralPh, errorPh )
 
-
-
 if __name__ == "__main__":
-
     heater = ATP.Heater(10 , 0)
     dispensor = ATP.Dispensor(11 , 0)
 
